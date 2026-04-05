@@ -1,0 +1,10 @@
+{
+    "builds": [{
+        "src": "venuesync/wsgi.py",
+        "use": "@vercel/python"
+    }],
+    "routes": [{
+        "src": "/(.*)",
+        "dest": "venuesync/wsgi.py"
+    }]
+}
