@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="flex min-h-[calc(100vh-64px)] w-full bg-gray-50"> 
+
+    <div class="w-full md:w-1/2 flex items-center justify-center p-6 lg:p-12 z-10">
+        
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border-t-4 border-[#ff6b00] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-orange-500/20">
+            <div class="text-center mb-8">
+                <svg class="mx-auto h-12 w-12 text-[#ff6b00] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                </svg>
+                <h2 class="text-3xl font-extrabold text-[#0b1c3a]">TKIET Portal</h2>
+                <p class="text-gray-500 mt-2">Sign in to VenueSync</p>
+            </div>
+
+            <form method="POST" action="">
+                {% csrf_token %}
+                
+                {% if error %}
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded shadow-sm" role="alert">
+                    <p class="font-bold">Error</p>
+                    <p>{{ error }}</p>
+                </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" name="username" class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#ff6b00] focus:border-transparent transition" required>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" name="password" class="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-[#ff6b00] focus:border-transparent transition" required>
+                </div>
+
+                <button type="submit" class="w-full bg-[#0b1c3a] hover:bg-[#152b52] text-white font-bold py-3 px-4 rounded shadow-lg transition duration-300 flex justify-center items-center">
+                    <span>Secure Login</span>
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="gallery-slider" 
+         class="hidden md:flex w-1/2 bg-cover bg-center transition-all duration-1000 ease-in-out relative items-end pb-24 justify-center border-l-4 border-[#0b1c3a]" 
+         style="background-image: url('{% static "images/campus.jpg" %}');">
+         
+         <div class="absolute inset-0 bg-gradient-to-t from-[#0b1c3a] via-black/30 to-transparent opacity-90 rounded-l-3xl shadow-[inset_20px_0_50px_rgba(0,0,0,0.5)]"></div>
+
+         <div id="slide-text-container" class="relative z-10 text-center transform transition-all duration-700 ease-in-out translate-y-0 opacity-100 px-8">
+             <h2 id="slide-title" class="text-4xl lg:text-5xl font-extrabold text-white tracking-wider mb-4 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
+                 TKIET Campus
+             </h2>
+             <p id="slide-desc" class="text-[#ff6b00] font-bold tracking-[0.25em] uppercase text-xs lg:text-sm drop-shadow-lg bg-white/10 backdrop-blur-md py-2 px-6 rounded-full inline-block border border-white/20 shadow-xl">
+                 Where Innovation Begins ✨
+             </p>
+         </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // Setup your slides here
+       // Setup your slides here
+        const slides = [
+            {
+                img: "{% static 'images/campus.jpg' %}",
+                title: "TKIET Main Campus",
+                desc: "Welcome to VenueSync ✨"
+            },
+            {
+                img: "{% static 'images/comp.jpg' %}",
+                title: "Vinay Kore Hall",
+                desc: ""
+            },
+            {
+                img: "{% static 'images/civil.jpeg' %}",
+                title: "Civil Seminar Hall",
+                desc: "Civil Engineering Department 🏗️"
+            },
+            {
+                img: "{% static 'images/mech.bmp' %}",
+                title: "Mechanical Seminar Hall",
+                desc: "Mechanical Engineering Department ⚙️"
+            },
+            {
+                img: "{% static 'images/chem.png' %}",
+                title: "Chemical Seminar Hall",
+                desc: "Chemical Engineering Department 🧪"
+            }
+        ];
+        
+        let currentIndex = 0;
+        const sliderDiv = document.getElementById("gallery-slider");
+        const textContainer = document.getElementById("slide-text-container");
+        const titleEl = document.getElementById("slide-title");
+        const descEl = document.getElementById("slide-desc");
+
+        // Slide logic runs every 4.5 seconds
+        setInterval(() => {
+            // 1. Slide text down and fade it out
+            textContainer.classList.remove("translate-y-0", "opacity-100");
+            textContainer.classList.add("translate-y-8", "opacity-0");
+
+            // 2. Wait 600ms, then swap image and text, then fade text back up!
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % slides.length;
+                
+                // Swap image and text content
+                sliderDiv.style.backgroundImage = `url('${slides[currentIndex].img}')`;
+                titleEl.innerText = slides[currentIndex].title;
+                descEl.innerText = slides[currentIndex].desc;
+
+                // Slide text back up and fade in
+                textContainer.classList.remove("translate-y-8", "opacity-0");
+                textContainer.classList.add("translate-y-0", "opacity-100");
+            }, 600); 
+            
+        }, 4500); 
+    });
+</script>
+{% endblock content %}

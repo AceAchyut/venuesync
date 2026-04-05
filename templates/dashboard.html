@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="fixed inset-0 bg-gray-50 flex overflow-hidden z-0">
+    
+    <div class="flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
+        
+        <div class="flex justify-between items-end border-b-2 border-gray-200 pb-6 mb-8">
+            <div>
+                <h1 class="text-4xl font-extrabold text-[#0b1c3a] tracking-tight">VenueSync Dashboard</h1>
+                <p class="text-gray-500 mt-2 text-sm font-medium">
+                    User: <span class="text-[#ff6b00] font-bold">{{ request.user.username }}</span> | 
+                    Role: <span class="uppercase tracking-wider">{{ request.user.get_role_display }}</span>
+                </p>
+            </div>
+            <form action="/logout/" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-red-600 font-bold py-2 px-6 rounded-lg transition duration-300 shadow-sm flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </button>
+            </form>
+        </div>
+
+        <div class="mb-10">
+            <h3 class="text-xl font-bold text-[#0b1c3a] mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-[#ff6b00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Master Schedule
+            </h3>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div id="calendar" style="height: 700px; width: 100%;"></div>
+            </div>
+        </div>
+
+        {% if is_admin %}
+            {% if hall %}
+                <h3 class="text-xl font-bold text-[#0b1c3a] mb-4">Manage Requests: <span class="text-[#ff6b00]">{{ hall.name }}</span></h3>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-10">
+                    <table class="min-w-full leading-normal">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200">
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Requested By</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Purpose</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 border-b border-gray-100 text-sm font-bold text-gray-800">{{ booking.user.username }}</td>
+                                <td class="px-6 py-4 border-b border-gray-100 text-sm">
+                                    <p class="font-bold text-[#0b1c3a]">{{ booking.date }}</p>
+                                    <p class="text-gray-500 text-xs mt-1">{{ booking.start_time }} to {{ booking.end_time }}</p>
+                                </td>
+                                <td class="px-6 py-4 border-b border-gray-100 text-sm text-gray-600">{{ booking.purpose }}</td>
+                                <td class="px-6 py-4 border-b border-gray-100 text-sm">
+                                    {% if booking.status == 'pending' %}
+                                        <span class="px-3 py-1 font-bold text-yellow-700 bg-yellow-100 rounded-lg text-xs">Pending</span>
+                                    {% elif booking.status == 'approved' %}
+                                        <span class="px-3 py-1 font-bold text-green-700 bg-green-100 rounded-lg text-xs">Approved</span>
+                                    {% else %}
+                                        <span class="px-3 py-1 font-bold text-red-700 bg-red-100 rounded-lg text-xs">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 border-b border-gray-100 text-sm text-center space-y-1">
+                                    {% if booking.status == 'pending' %}
+                                        <a href="{% url 'update_status' booking.id 'approve' %}" class="block bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded-lg shadow-sm">Approve</a>
+                                        <a href="{% url 'update_status' booking.id 'reject' %}" class="block bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded-lg shadow-sm">Reject</a>
+                                    {% else %}
+                                        <span class="text-gray-400 italic font-medium">Processed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="px-6 py-10 text-center text-gray-500 font-medium">No booking requests for your hall yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 font-medium">Error: You are an admin, but no hall is assigned to you!</div>
+            {% endif %}
+
+        {% else %}
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
+                
+                <div>
+                    <h3 class="text-xl font-bold text-[#0b1c3a] mb-4">Manual Booking Request</h3>
+                    <form id="bookingForm" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 relative grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {% csrf_token %}
+                        <input type="hidden" id="user_id" value="{{ request.user.id }}">
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-600 text-xs font-bold mb-2 uppercase tracking-wide">Select Venue</label>
+                            <select id="hall_id" class="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-lg py-3 px-4 focus:ring-2 focus:ring-[#ff6b00] focus:bg-white transition" required>
+                                <option value="">-- Choose a Hall --</option>
+                                {% for hall in halls %}
+                                <option value="{{ hall.id }}">{{ hall.name }} (Cap: {{ hall.capacity }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-600 text-xs font-bold mb-2 uppercase tracking-wide">Event Date</label>
+                            <input type="date" id="date" class="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-lg py-3 px-4 focus:ring-2 focus:ring-[#ff6b00] focus:bg-white transition" required>
+                        </div>
+
+                        <div id="availabilityWarning" class="md:col-span-2 empty:hidden"></div>
+
+                        <div>
+                            <label class="block text-gray-600 text-xs font-bold mb-2 uppercase tracking-wide">Start Time</label>
+                            <input type="time" id="start_time" class="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-lg py-3 px-4 focus:ring-2 focus:ring-[#ff6b00] focus:bg-white transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 text-xs font-bold mb-2 uppercase tracking-wide">End Time</label>
+                            <input type="time" id="end_time" class="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-lg py-3 px-4 focus:ring-2 focus:ring-[#ff6b00] focus:bg-white transition" required>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-600 text-xs font-bold mb-2 uppercase tracking-wide">Purpose / Event Name</label>
+                            <textarea id="purpose" rows="2" class="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-lg py-3 px-4 focus:ring-2 focus:ring-[#ff6b00] focus:bg-white transition" placeholder="e.g., Guest Lecture on AI" required></textarea>
+                        </div>
+
+                        <div class="md:col-span-2 mt-2">
+                            <button type="submit" class="w-full bg-[#0b1c3a] hover:bg-[#1a365d] text-white font-bold py-4 px-4 rounded-xl shadow-lg transition duration-300">Submit Request</button>
+                        </div>
+                    </form>
+                    <div id="alertBox" class="hidden mt-4 p-4 rounded-xl text-center font-bold"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-[#0b1c3a] mb-4">My Requests</h3>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-[450px] overflow-y-auto">
+                        <table class="min-w-full leading-normal">
+                            <thead class="sticky top-0 bg-gray-50 z-10">
+                                <tr>
+                                    <th class="px-5 py-3 border-b text-left text-xs font-bold text-gray-500 uppercase">Venue & Time</th>
+                                    <th class="px-5 py-3 border-b text-left text-xs font-bold text-gray-500 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-5 py-4 border-b border-gray-100 text-sm">
+                                        <p class="font-bold text-[#0b1c3a]">{{ booking.hall.name }}</p>
+                                        <p class="text-gray-500 text-xs">{{ booking.date }} | {{ booking.start_time }} - {{ booking.end_time }}</p>
+                                    </td>
+                                    <td class="px-5 py-4 border-b border-gray-100 text-sm">
+                                        {% if booking.status == 'pending' %}
+                                            <span class="px-2 py-1 font-bold text-yellow-700 bg-yellow-100 rounded text-xs">Pending</span>
+                                        {% elif booking.status == 'approved' %}
+                                            <span class="px-2 py-1 font-bold text-green-700 bg-green-100 rounded text-xs">Approved</span>
+                                        {% else %}
+                                            <span class="px-2 py-1 font-bold text-red-700 bg-red-100 rounded text-xs">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="2" class="px-5 py-10 text-center text-gray-400 font-medium">No requests yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if not is_admin %}
+    <div class="w-full md:w-[400px] xl:w-[450px] bg-white border-l border-gray-200 shadow-2xl flex flex-col z-20 h-full">
+        <div class="bg-gradient-to-r from-[#0b1c3a] to-[#1a365d] p-5 shadow-md flex items-center">
+            <div class="bg-white/20 p-2 rounded-lg mr-4 backdrop-blur-sm">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div>
+                <h3 class="text-white font-extrabold text-xl leading-tight">VenueSync AI</h3>
+                <p class="text-[#ff6b00] text-xs font-bold uppercase tracking-wider mt-1">Smart Assistant</p>
+            </div>
+        </div>
+
+        <div id="chat-box" class="flex-1 overflow-y-auto p-5 bg-gray-50 flex flex-col space-y-5 scroll-smooth">
+            <div class="flex items-start">
+                <div class="bg-white border border-gray-200 text-gray-800 text-sm py-3 px-4 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%] leading-relaxed">
+                    Hello <span class="font-bold text-[#ff6b00]">{{ request.user.username }}</span>! 👋<br><br>
+                    I am your AI booking assistant. You can ask me to check availability, recommend halls, or book a venue directly.
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 bg-white border-t border-gray-200 pb-8">
+            <div class="relative">
+                <input type="text" id="aiChatInput" class="w-full bg-gray-100 text-gray-800 border-none rounded-xl py-4 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-[#0b1c3a] shadow-inner" placeholder="Ask VenueSync AI..." onkeypress="handleEnter(event)">
+                <button type="button" onclick="sendToAI()" class="absolute right-2 top-2 bottom-2 bg-[#ff6b00] hover:bg-[#e65c00] text-white rounded-lg px-3 transition duration-300 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+            <p class="text-center text-[10px] text-gray-400 mt-3 uppercase font-bold tracking-widest">Powered by Groq AI</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    // --- 1. FULLCALENDAR LOGIC ---
+   document.addEventListener('DOMContentLoaded', async function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            slotMinTime: '08:00:00',
+            slotMaxTime: '18:00:00',
+            allDaySlot: false,
+            
+            // 🌟 THE FIX: Change to 500 for a perfect, standard fit!
+            height: 500, 
+            expandRows: true,
+            stickyHeaderDates: true,
+            events: async function(info, successCallback, failureCallback) {
+                try {
+                    const response = await fetch('/api/bookings/');
+                    const data = await response.json();
+                    const events = data.map(booking => {
+                        let eventColor = '#eab308'; // Yellow
+                        if (booking.status === 'approved') eventColor = '#22c55e'; // Green
+                        if (booking.status === 'rejected') eventColor = '#ef4444'; // Red
+                        return {
+                            title: `${booking.hall_name} - ${booking.purpose}`,
+                            start: `${booking.date}T${booking.start_time}`,
+                            end: `${booking.date}T${booking.end_time}`,
+                            color: eventColor,
+                            display: booking.status === 'rejected' ? 'none' : 'auto' 
+                        };
+                    });
+                    successCallback(events);
+                } catch (error) {
+                    console.error('Calendar Error:', error);
+                    failureCallback(error);
+                }
+            }
+        });
+        calendar.render();
+    });
+
+    {% if not is_admin %}
+    // --- 2. LIVE AVAILABILITY CHECKER ---
+    const hallSelect = document.getElementById('hall_id');
+    const dateSelect = document.getElementById('date');
+    const warningBox = document.getElementById('availabilityWarning');
+
+    async function checkAvailability() {
+        if (!hallSelect || !dateSelect) return;
+        const hallId = hallSelect.value;
+        const date = dateSelect.value;
+        if (!hallId || !date) { warningBox.innerHTML = ''; return; }
+
+        try {
+            const response = await fetch('/api/bookings/');
+            const bookings = await response.json();
+            const conflicts = bookings.filter(b => 
+                (b.hall == hallId || b.hall_id == hallId) && 
+                b.date === date && 
+                (b.status === 'approved' || b.status === 'pending')
+            );
+
+            if (conflicts.length > 0) {
+                let times = conflicts.map(b => `<span class="font-extrabold underline">${b.start_time} to ${b.end_time}</span>`).join(' and ');
+                warningBox.innerHTML = `<div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-sm text-red-800 shadow-sm animate-pulse">⚠️ <b>Booked Today:</b> Avoid ${times}</div>`;
+            } else {
+                warningBox.innerHTML = `<div class="p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg text-sm text-green-800 shadow-sm">✅ <b>Clear:</b> Hall is free all day!</div>`;
+            }
+        } catch (e) { console.error(e); }
+    }
+    if(hallSelect) hallSelect.addEventListener('change', checkAvailability);
+    if(dateSelect) dateSelect.addEventListener('change', checkAvailability);
+
+    // --- 3. AI CHATBOT LOGIC ---
+    const chatBox = document.getElementById('chat-box');
+    const inputField = document.getElementById('aiChatInput');
+
+    function handleEnter(e) { if (e.key === 'Enter') sendToAI(); }
+
+    function addMessage(sender, text, isHtml=false) {
+        if (!chatBox) return null;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = sender === 'user' ? 'flex items-end justify-end' : 'flex items-start';
+        
+        let bubbleStyle = sender === 'user' 
+            ? 'bg-[#0b1c3a] text-white rounded-2xl rounded-tr-sm shadow-md' 
+            : 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm shadow-sm';
+
+        msgDiv.innerHTML = `<div class="text-sm py-3 px-4 max-w-[85%] leading-relaxed ${bubbleStyle}">${isHtml ? text : text}</div>`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return msgDiv;
+    }
+
+    async function sendToAI() {
+        const text = inputField.value.trim();
+        if (!text) return;
+        
+        addMessage('user', text);
+        inputField.value = '';
+        const loadingMsg = addMessage('ai', '<span class="flex items-center space-x-2"><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span></span>', true);
+
+        try {
+            const response = await fetch('/api/ai-parse/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ text: text })
+            });
+            
+            const data = await response.json();
+            loadingMsg.remove();
+            
+            if (data.error) {
+                addMessage('ai', '⚠️ Error: ' + data.error);
+            } else if (data.is_incomplete) {
+                addMessage('ai', data.message, true);
+            } else if (data.has_conflict) {
+                addMessage('ai', `❌ <b>Conflict:</b> ${data.message}`, true);
+            } else {
+                addMessage('ai', `✅ <b>Ready:</b> ${data.message}`, true);
+                
+                if (data.hall_id) document.getElementById('hall_id').value = data.hall_id;
+                if (data.date) document.getElementById('date').value = data.date;
+                if (data.start_time) document.getElementById('start_time').value = data.start_time;
+                if (data.end_time) document.getElementById('end_time').value = data.end_time;
+                if (data.purpose) document.getElementById('purpose').value = data.purpose;
+                
+                checkAvailability(); // Auto-trigger the live warning checker just in case!
+                
+                const form = document.getElementById('bookingForm');
+                form.classList.add('ring-4', 'ring-[#ff6b00]', 'ring-opacity-50', 'transition', 'duration-500');
+                setTimeout(() => form.classList.remove('ring-4', 'ring-[#ff6b00]', 'ring-opacity-50'), 2000);
+            }
+        } catch (error) {
+            loadingMsg.remove();
+            addMessage('ai', '⚠️ Network error. Check your server.');
+        }
+    }
+
+    // --- 4. FORM SUBMISSION ---
+    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        const alertBox = document.getElementById('alertBox');
+        alertBox.className = 'hidden'; 
+        
+        const data = {
+            user: document.getElementById('user_id').value,
+            hall: document.getElementById('hall_id').value,
+            date: document.getElementById('date').value,
+            start_time: document.getElementById('start_time').value,
+            end_time: document.getElementById('end_time').value,
+            purpose: document.getElementById('purpose').value,
+            status: 'pending'
+        };
+        try {
+            const response = await fetch('/api/bookings/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alertBox.textContent = '🎉 Request sent! Waiting for Admin approval.';
+                alertBox.className = 'mt-4 p-4 rounded-xl text-center font-bold bg-green-100 text-green-800 border border-green-300 block';
+                this.reset();
+                setTimeout(() => location.reload(), 1500); 
+            } else {
+                alertBox.textContent = '⚠️ ' + (result.error || 'Check your inputs.');
+                alertBox.className = 'mt-4 p-4 rounded-xl text-center font-bold bg-red-100 text-red-800 border border-red-300 block';
+            }
+        } catch (error) {
+            alertBox.textContent = 'Network error. Try again.';
+            alertBox.className = 'mt-4 p-4 rounded-xl text-center font-bold bg-red-100 text-red-800 border border-red-300 block';
+        }
+    });
+    {% endif %}
+</script>
+{% endblock content %}
